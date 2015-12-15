@@ -1,0 +1,69 @@
+#!/bin/bash
+set -o pipefail
+
+USAGE="$0 [-v] <command> [<arg>] ..."
+
+rootdir=$(dirname "$0")
+rootdir=$(readlink -f $rootdir/..)
+. $rootdir/lib/travis-rerun-common.sh
+
+usage() {
+  echo "USAGE:"
+  indent "travis-rerun - run Travis CI jobs on a VM.\n"
+  indent "$USAGE\n"
+  indent "travis-rerun allows you to re-run Travis CI jobs in your own VM.\n"
+  indent "The main purpose of this tool is to help debug issues that only"
+  indent "show up on Travis CI.\n"
+  indent "COMMANDS\n"
+  indent "travis-rerun install                        install this tool and all its requirements" 2
+  indent "travis-rerun image                          build the server image on which a job runs" 2
+  indent "travis-rerun script <travis-repo> <job-no>  build a script which runs a specific job" 2
+  exit 0
+}
+
+if [ -z $1 ]; then
+  usage
+fi
+
+# get user options
+while [ $# -ge 0 ]; do
+  # get options
+  arg="$1"
+  shift
+
+  case "$arg" in
+  -h|--help) usage ;;
+  -v|--verbose) verbose=1 ;;
+  "") break ;;
+  --*)
+    die "unrecognised option: '$arg'\n$USAGE" ;;
+  *)
+    if [ -z "$name" ]; then
+      name="$arg"
+    elif [[ -z "$repo_slug" ]] && [[ "$name" = "script" ]]; then
+      repo_slug="$arg"
+    elif [[ -z "$job_no" ]] && [[ "$name" = "script" ]]; then
+      job_no="$arg"
+    else
+      die "too many arguments\n$USAGE"
+    fi
+    ;;
+  esac
+done
+
+if [ "$name" = "install" ]; then
+   . $rootdir/lib/travis-rerun-install.sh
+   exit 0
+fi
+
+if [ "$name" = "image" ]; then
+   . $rootdir/lib/travis-rerun-image.sh
+   exit 0
+fi
+
+if [ "$name" = "script" ]; then
+   . $rootdir/lib/travis-rerun-script.sh "$repo_slug" "$job_no"
+   exit 0
+fi
+
+die "unrecognised command: '$name'\n$USAGE"
