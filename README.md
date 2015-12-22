@@ -1,4 +1,4 @@
-# travis-rerun - re-run Travis CI jobs offline
+# travis-rerun - rerun Travis CI jobs offline
 
 Sometimes errors show up in continuous integration that don't appear
 elsewhere. With travis-rerun you can mirror Travis CI to facilitate
